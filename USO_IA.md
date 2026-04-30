@@ -68,3 +68,7 @@ As partes consideradas mais relevantes para avaliação técnica são:
 
 A IA foi utilizada como ferramenta de apoio para acelerar o desenvolvimento e auxiliar na resolução de problemas técnicos.
 Toda a lógica aplicada no sistema foi compreendida, adaptada e validada manualmente durante o desenvolvimento.
+
+## Oque foi aprendido
+
+Como candidato pude entender melhor como funciona a aplicação de API
