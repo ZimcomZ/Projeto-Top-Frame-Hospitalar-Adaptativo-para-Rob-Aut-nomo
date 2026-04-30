@@ -36,23 +36,7 @@ A interface segue o estilo de terminal, com visual minimalista e foco em leitura
 
 ---
 
-### 2. Clonar o repositório
-
-```bash
-git clone https://github.com/ZimcomZ
-```
-
----
-
-### 3. Acessar a pasta do projeto
-
-```bash
-cd Projeto-Top-Frame-Hospitalar-Adaptativo-para-Rob-Aut-nomo
-```
-
----
-
-### 4. Instalar as dependências
+### 2. Instalar as dependências
 
 ```bash
 npm install
@@ -60,7 +44,7 @@ npm install
 
 ---
 
-### 5. Rodar o projeto
+### 3. Rodar o projeto
 
 ```bash
 npm run dev
@@ -68,7 +52,7 @@ npm run dev
 
 ---
 
-### 6. Acessar no navegador
+### 4. Acessar no navegador
 
 Abra:
 
