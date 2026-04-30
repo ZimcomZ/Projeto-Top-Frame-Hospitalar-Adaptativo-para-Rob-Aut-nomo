@@ -40,7 +40,7 @@
 
 **Resultado esperado:**
 
-* Um alerta é exibido quando a bateria fica baixa (apenas uma vez)
+* Um alerta é exibido quando a bateria fica baixa (sempre que descer abaixo de 20%)
 * Alertas de latência aparecem ocasionalmente
 * Cada alerta contém data e hora
 * A telemetria (bateria, latência, status) é atualizada em tempo real
