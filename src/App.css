@@ -1,0 +1,67 @@
+body {
+  margin: 0;
+  background: black;
+  color: white;
+  font-family: monospace;
+}
+
+.dashboard {
+  display: flex;
+  height: 100vh;
+}
+
+.left-panel {
+  width: 40%;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid white;
+}
+
+.missions-box {
+  height: 60%;
+  overflow-y: auto;
+  border-bottom: 1px solid white;
+  padding: 15px;
+}
+
+.create-box {
+  height: 40%;
+  padding: 15px;
+}
+
+.telemetry-box {
+  width: 30%;
+  border-right: 1px solid white;
+  padding: 15px;
+}
+
+.alerts-box {
+  width: 30%;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+input {
+  display: block;
+  width: 90%;
+  margin-bottom: 10px;
+  background: black;
+  color: white;
+  border: 1px solid white;
+  padding: 5px;
+  font-family: monospace;
+}
+
+button {
+  background: black;
+  color: white;
+  border: 1px solid white;
+  padding: 8px;
+  cursor: pointer;
+  font-family: monospace;
+}
+
+button:hover {
+  background: white;
+  color: black;
+}
