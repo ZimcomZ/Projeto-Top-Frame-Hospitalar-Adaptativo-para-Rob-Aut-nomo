@@ -41,7 +41,7 @@ export default function TelemetryPanel({ battery, latency, robotStatus, currentM
         onClick={onEmergencyStop} 
         style={{ marginTop: "15px" }}
       >
-        {isEmergency ? "⚠ RETOMAR OPERAÇÃO" : "🛑 PARADA DE EMERGÊNCIA"}
+        {isEmergency ? "RETOMAR OPERAÇÃO" : "PARADA DE EMERGÊNCIA"}
       </button>
     </div>
   );

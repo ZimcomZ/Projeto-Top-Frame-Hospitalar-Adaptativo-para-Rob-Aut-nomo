@@ -27,7 +27,7 @@ export default function MissionList({ sortedMissions }) {
             <p className="progress-bar">{renderProgressBar(m.distancia, m.originalDistance)}</p>
             {m.interceptionInfo && (
               <div className="interception-box">
-                <p className="text-red font-bold" style={{ fontSize: '0.8em' }}>⚠ INTERCEPTADA</p>
+                <p className="text-red font-bold" style={{ fontSize: '0.8em' }}>AVISO: INTERCEPTADA</p>
                 <p className="dim-text" style={{ fontSize: '0.75em' }}>{m.interceptionInfo.reason}</p>
                 <p className="dim-text" style={{ fontSize: '0.7em' }}>{m.interceptionInfo.timestamp}</p>
               </div>

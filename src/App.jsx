@@ -106,7 +106,7 @@ function App() {
       addAlert("OPERAÇÃO RETOMADA");
     } else {
       setIsEmergency(true);
-      addAlert("🛑 PARADA DE EMERGÊNCIA ATIVADA 🛑");
+      addAlert("PARADA DE EMERGÊNCIA ATIVADA");
       // Aborta missão atual e joga pra fila
       const executingMission = missions.find(m => m.status === "em_execucao");
       if (executingMission) {
@@ -162,14 +162,14 @@ function App() {
         // Regra 1: P1 interrompe P2 ou P3 imediatamente
         if (nextPending.prioridade === 1 && executing.prioridade > 1) {
           shouldInterrupt = true;
-          addAlert(`🚨 INTERRUPÇÃO CRÍTICA: Missão ${nextPending.id} (P1) interceptou Missão ${executing.id}`);
+          addAlert(`INTERRUPÇÃO CRÍTICA: Missão ${nextPending.id} (P1) interceptou Missão ${executing.id}`);
         } 
         // Regra 2: P2 interrompe P3 se estiver no início (< 50% concluído)
         else if (nextPending.prioridade === 2 && executing.prioridade === 3) {
           const progress = ((executing.originalDistance - executing.distancia) / executing.originalDistance);
           if (progress < 0.5) {
             shouldInterrupt = true;
-            addAlert(`⚠ RE-ROTEAMENTO: Missão ${nextPending.id} (P2) prioritária. Missão ${executing.id} abortada.`);
+            addAlert(`AVISO DE RE-ROTEAMENTO: Missão ${nextPending.id} (P2) prioritária. Missão ${executing.id} abortada.`);
           }
         }
 
