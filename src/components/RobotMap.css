@@ -1,0 +1,91 @@
+.map-container {
+  margin-bottom: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.grid-canvas {
+  width: 100%;
+  height: 250px;
+  position: relative;
+  background: #010409;
+  background-image: 
+    linear-gradient(rgba(48, 54, 61, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(48, 54, 61, 0.2) 1px, transparent 1px);
+  background-size: 20px 20px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.map-node {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #58a6ff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.node-label {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65em;
+  color: #8b949e;
+  white-space: nowrap;
+}
+
+.path-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.path-line line {
+  stroke: rgba(63, 185, 80, 0.3);
+  stroke-width: 2;
+  stroke-dasharray: 5, 5;
+}
+
+.robot-marker {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #3fb950;
+  border-radius: 4px;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  transition: left 1s linear, top 1s linear;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 10px;
+  color: #000;
+}
+
+.robot-marker.emergency {
+  background: #ff7b72;
+}
+
+.robot-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  background: inherit;
+  opacity: 0.5;
+  animation: marker-pulse 2s infinite;
+}
+
+@keyframes marker-pulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(2.5); opacity: 0; }
+}

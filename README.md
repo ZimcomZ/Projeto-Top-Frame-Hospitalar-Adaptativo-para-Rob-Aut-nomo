@@ -12,6 +12,9 @@ A solução foi estruturada utilizando padrões modernos de desenvolvimento web 
 
 *   **Frontend:** React 19 + Vite (para renderização de alta performance e HMR).
 *   **Estado e Reatividade:** Hooks customizados (`useMemo`, `useCallback`) para garantir que a lógica de ordenação e os efeitos colaterais de telemetria não causem re-renderizações desnecessárias.
+*   **Persistência (LocalStorage):** Sincronização automática do estado da fila, bateria e logs com o armazenamento local do navegador, garantindo resiliência contra recarregamentos acidentais.
+*   **Feedback Espacial (RobotMap):** Renderização de uma grade 2D que interpola a posição do robô entre pontos de interesse (Farmácia, Laboratório, etc) baseada no progresso da missão.
+*   **Integração Contínua (CI):** Pipeline configurado via GitHub Actions para validação automática de lint e execução de testes unitários a cada commit.
 *   **Modularização (Clean Architecture):**
     *   `src/components/`: Componentes de UI desacoplados e reutilizáveis.
     *   `src/utils/`: Lógica de negócio pura, isolada da camada de apresentação para facilitar testes.

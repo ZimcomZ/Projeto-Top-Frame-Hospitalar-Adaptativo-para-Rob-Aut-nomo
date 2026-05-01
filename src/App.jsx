@@ -4,21 +4,33 @@ import MissionForm from "./components/MissionForm";
 import MissionList from "./components/MissionList";
 import TelemetryPanel from "./components/TelemetryPanel";
 import SystemLog from "./components/SystemLog";
+import RobotMap from "./components/RobotMap";
 import { sortMissions } from "./utils/missionLogic";
 
 function App() {
-  const [missions, setMissions] = useState([]);
+  const [missions, setMissions] = useState(() => {
+    const saved = localStorage.getItem("missions");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Telemetria Global
-  const [battery, setBattery] = useState(100);
+  const [battery, setBattery] = useState(() => {
+    const saved = localStorage.getItem("battery");
+    return saved ? Number(saved) : 100;
+  });
   const [latency, setLatency] = useState(50);
   const [robotStatus, setRobotStatus] = useState("Inativo");
   const [currentMission, setCurrentMission] = useState("Nenhuma");
   const [lastUpdate, setLastUpdate] = useState("--:--:--");
-  const [isEmergency, setIsEmergency] = useState(false);
+  const [isEmergency, setIsEmergency] = useState(() => {
+    return localStorage.getItem("isEmergency") === "true";
+  });
 
   // Alertas
-  const [alerts, setAlerts] = useState([]);
+  const [alerts, setAlerts] = useState(() => {
+    const saved = localStorage.getItem("alerts");
+    return saved ? JSON.parse(saved) : [];
+  });
   const [batteryAlertSent, setBatteryAlertSent] = useState(false);
 
   //---------------------------------------------------
@@ -50,6 +62,15 @@ function App() {
   // LÓGICA DE NEGÓCIO
   //---------------------------------------------------
   const sortedMissions = useMemo(() => sortMissions(missions), [missions]);
+  const executingMission = useMemo(() => missions.find(m => m.status === "em_execucao"), [missions]);
+
+  // Persistência em LocalStorage
+  useEffect(() => {
+    localStorage.setItem("missions", JSON.stringify(missions));
+    localStorage.setItem("battery", battery.toString());
+    localStorage.setItem("alerts", JSON.stringify(alerts));
+    localStorage.setItem("isEmergency", isEmergency.toString());
+  }, [missions, battery, alerts, isEmergency]);
 
   function handleAddMission(missionData) {
     const newMission = {
@@ -276,11 +297,12 @@ function App() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [sortedMissions, battery, batteryAlertSent, sendHospitalStatus, addAlert, isEmergency]);
+  }, [sortedMissions, missions, battery, batteryAlertSent, sendHospitalStatus, addAlert, isEmergency]);
 
   return (
     <div className={`dashboard ${isEmergency ? 'emergency-mode' : ''}`}>
       <div className="left-panel">
+        <RobotMap activeMission={executingMission} robotStatus={robotStatus} />
         <MissionList sortedMissions={sortedMissions} />
         <MissionForm onAddMission={handleAddMission} />
       </div>
