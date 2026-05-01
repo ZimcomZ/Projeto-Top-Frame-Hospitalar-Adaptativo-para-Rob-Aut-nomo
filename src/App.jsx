@@ -33,6 +33,9 @@ function App() {
   });
   const [batteryAlertSent, setBatteryAlertSent] = useState(false);
 
+  // Seleção via Mapa
+  const [mapSelection, setMapSelection] = useState({ origem: null, destino: null });
+
   //---------------------------------------------------
   // ALERTAS E API
   //---------------------------------------------------
@@ -80,6 +83,7 @@ function App() {
       status: "pendente"
     };
     setMissions(prev => [...prev, newMission]);
+    setMapSelection({ origem: null, destino: null }); // Limpa seleção após injetar
   }
 
   function handleCancelMission() {
@@ -116,6 +120,15 @@ function App() {
       setRobotStatus("PARADA DE EMERGÊNCIA");
       setCurrentMission("Nenhuma");
     }
+  }
+
+  function handleMapClick(locationName) {
+    setMapSelection(prev => {
+      if (!prev.origem || (prev.origem && prev.destino)) {
+        return { origem: locationName, destino: null };
+      }
+      return { ...prev, destino: locationName };
+    });
   }
 
   //---------------------------------------------------
@@ -302,9 +315,17 @@ function App() {
   return (
     <div className={`dashboard ${isEmergency ? 'emergency-mode' : ''}`}>
       <div className="left-panel">
-        <RobotMap activeMission={executingMission} robotStatus={robotStatus} />
+        <RobotMap 
+          activeMission={executingMission} 
+          robotStatus={robotStatus} 
+          onSelectLocation={handleMapClick} 
+        />
         <MissionList sortedMissions={sortedMissions} />
-        <MissionForm onAddMission={handleAddMission} />
+        <MissionForm 
+          onAddMission={handleAddMission} 
+          externalOrigem={mapSelection.origem} 
+          externalDestino={mapSelection.destino} 
+        />
       </div>
 
       <TelemetryPanel 

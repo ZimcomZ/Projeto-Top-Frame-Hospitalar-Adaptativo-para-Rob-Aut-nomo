@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { LOCATIONS, findLocationKey } from '../utils/locations';
 
-export default function MissionForm({ onAddMission }) {
+export default function MissionForm({ onAddMission, externalOrigem, externalDestino }) {
   const [formData, setFormData] = useState({
     origem: "",
     destino: "",
@@ -9,6 +10,10 @@ export default function MissionForm({ onAddMission }) {
     distancia: ""
   });
   const [formErrors, setFormErrors] = useState({});
+
+  // Derivando estado para evitar useEffect síncrono (Best Practice React)
+  const displayOrigem = externalOrigem || formData.origem;
+  const displayDestino = externalDestino || formData.destino;
 
   function handleInputChange(e) {
     const { name, value } = e.target;
@@ -20,8 +25,13 @@ export default function MissionForm({ onAddMission }) {
 
   function handleSubmit() {
     const errors = {};
-    if (!formData.origem.trim()) errors.origem = "Origem obrigatória";
-    if (!formData.destino.trim()) errors.destino = "Destino obrigatório";
+    
+    // Validação estrita usando os valores visíveis (mapa ou input)
+    const validatedOrigem = findLocationKey(displayOrigem);
+    const validatedDestino = findLocationKey(displayDestino);
+
+    if (!validatedOrigem) errors.origem = "Local de origem inválido ou inexistente";
+    if (!validatedDestino) errors.destino = "Local de destino inválido ou inexistente";
     if (!formData.tipoCarga.trim()) errors.tipoCarga = "Carga obrigatória";
 
     const prio = Number(formData.prioridade);
@@ -36,8 +46,8 @@ export default function MissionForm({ onAddMission }) {
     }
 
     onAddMission({
-      origem: formData.origem,
-      destino: formData.destino,
+      origem: validatedOrigem,
+      destino: validatedDestino,
       tipoCarga: formData.tipoCarga,
       prioridade: prio,
       distancia: dist
@@ -52,11 +62,31 @@ export default function MissionForm({ onAddMission }) {
       <p className="panel-title">{">"} NOVA MISSÃO</p>
       <hr className="divider" />
 
-      <input name="origem" placeholder="Origem (ex: Quarto 102)" value={formData.origem} onChange={handleInputChange} className={formErrors.origem ? 'input-error' : ''} />
+      <label className="input-label">Origem (Digite ou clique no mapa)</label>
+      <input 
+        name="origem" 
+        list="location-options"
+        placeholder="Ex: Farmacia, Quarto 101" 
+        value={displayOrigem} 
+        onChange={handleInputChange} 
+        className={formErrors.origem ? 'input-error' : ''} 
+      />
       {formErrors.origem && <p className="error-msg">{formErrors.origem}</p>}
 
-      <input name="destino" placeholder="Destino (ex: Farmácia)" value={formData.destino} onChange={handleInputChange} className={formErrors.destino ? 'input-error' : ''} />
+      <label className="input-label">Destino (Digite ou clique no mapa)</label>
+      <input 
+        name="destino" 
+        list="location-options"
+        placeholder="Ex: Laboratorio, Recepcao" 
+        value={displayDestino} 
+        onChange={handleInputChange} 
+        className={formErrors.destino ? 'input-error' : ''} 
+      />
       {formErrors.destino && <p className="error-msg">{formErrors.destino}</p>}
+
+      <datalist id="location-options">
+        {Object.keys(LOCATIONS).map(loc => <option key={loc} value={loc} />)}
+      </datalist>
 
       <input name="tipoCarga" placeholder="Tipo de Carga (ex: Soro)" value={formData.tipoCarga} onChange={handleInputChange} className={formErrors.tipoCarga ? 'input-error' : ''} />
       {formErrors.tipoCarga && <p className="error-msg">{formErrors.tipoCarga}</p>}

@@ -251,3 +251,23 @@ button {
   border-radius: 4px;
 }
 
+
+.interactable {
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.interactable:hover {
+  transform: translate(-50%, -50%) scale(1.5);
+  background: #3fb950;
+  box-shadow: 0 0 10px #3fb950;
+}
+
+.input-label {
+  display: block;
+  font-size: 0.7em;
+  color: #8b949e;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+

@@ -1,24 +1,15 @@
 import { useMemo } from 'react';
 import './RobotMap.css';
+import { LOCATIONS } from '../utils/locations';
 
-const LOCATIONS = {
-  "Farmácia": { x: 10, y: 10 },
-  "Laboratório": { x: 90, y: 10 },
-  "Recepção": { x: 50, y: 50 },
-  "Quarto 101": { x: 10, y: 90 },
-  "Quarto 102": { x: 30, y: 90 },
-  "Quarto 103": { x: 50, y: 90 },
-  "Estação de Recarga": { x: 90, y: 90 }
-};
-
-export default function RobotMap({ activeMission, robotStatus }) {
+export default function RobotMap({ activeMission, robotStatus, onSelectLocation }) {
   const robotPos = useMemo(() => {
     if (!activeMission || robotStatus === "Inativo" || robotStatus === "Em Repouso") {
-      return LOCATIONS["Estação de Recarga"];
+      return LOCATIONS["Estacao de Recarga"];
     }
 
-    const start = LOCATIONS[activeMission.origem] || LOCATIONS["Recepção"];
-    const end = LOCATIONS[activeMission.destino] || LOCATIONS["Recepção"];
+    const start = LOCATIONS[activeMission.origem] || LOCATIONS["Recepcao"];
+    const end = LOCATIONS[activeMission.destino] || LOCATIONS["Recepcao"];
     
     const progress = (activeMission.originalDistance - activeMission.distancia) / activeMission.originalDistance;
     
@@ -30,23 +21,21 @@ export default function RobotMap({ activeMission, robotStatus }) {
 
   return (
     <div className="map-container">
-      <p className="panel-title">{">"} MAPA OPERACIONAL</p>
+      <p className="panel-title">{">"} MAPA OPERACIONAL (CLIQUE PARA SELECIONAR)</p>
       <hr className="divider" />
       
       <div className="grid-canvas">
-        {/* Renderizar Pontos de Interesse */}
         {Object.entries(LOCATIONS).map(([name, pos]) => (
           <div 
             key={name} 
-            className="map-node" 
+            className="map-node interactable" 
             style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-            title={name}
+            onClick={() => onSelectLocation(name)}
           >
             <span className="node-label">{name}</span>
           </div>
         ))}
 
-        {/* Renderizar Trajetória se houver missão */}
         {activeMission && (robotStatus === "Em Movimento" || robotStatus === "Re-roteando...") && (
           <svg className="path-line">
             <line 
@@ -58,7 +47,6 @@ export default function RobotMap({ activeMission, robotStatus }) {
           </svg>
         )}
 
-        {/* O Robô */}
         <div 
           className={`robot-marker ${robotStatus === "PARADA DE EMERGÊNCIA" ? 'emergency' : ''}`}
           style={{ left: `${robotPos.x}%`, top: `${robotPos.y}%` }}
