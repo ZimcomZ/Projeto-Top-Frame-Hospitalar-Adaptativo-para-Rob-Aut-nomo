@@ -1,189 +1,47 @@
-# Sistema de Controle de Robô Hospitalar (Simulado)
+# 🤖 Dashboard de Controle de Robô Hospitalar Autônomo
 
-## Link Publico
-https://projeto-top-frame-hospitalar-adapta-omega.vercel.app
+Sistema de monitoramento e gerenciamento de missões para robótica hospitalar, focado em alta disponibilidade, segurança operacional (Safety) e gerenciamento dinâmico de prioridades.
 
-## Descrição do Projeto
+## 📋 Visão Geral do Projeto
 
-Este projeto consiste em uma aplicação web que simula o controle de um robô hospitalar responsável pelo transporte de cargas dentro de um ambiente hospitalar.
+Este dashboard foi desenvolvido para simular o centro de controle de um robô autônomo operando em ambiente hospitalar. O sistema gerencia o ciclo de vida completo de uma missão, desde a triagem e ordenação por prioridade clínica até o tratamento de falhas críticas de hardware e bateria.
 
-O sistema foi desenvolvido com foco em simulação em tempo real, exibindo:
+## 🏗️ Arquitetura Técnica
 
-* Execução de missões
-* Telemetria do robô
-* Sistema de alertas
-* Integração simulada com API hospitalar
+A solução foi estruturada utilizando padrões modernos de desenvolvimento web para garantir escalabilidade e manutenibilidade:
 
-A interface segue o estilo de terminal, com visual minimalista e foco em leitura de dados.
+*   **Frontend:** React 19 + Vite (para renderização de alta performance e HMR).
+*   **Estado e Reatividade:** Hooks customizados (`useMemo`, `useCallback`) para garantir que a lógica de ordenação e os efeitos colaterais de telemetria não causem re-renderizações desnecessárias.
+*   **Modularização (Clean Architecture):**
+    *   `src/components/`: Componentes de UI desacoplados e reutilizáveis.
+    *   `src/utils/`: Lógica de negócio pura, isolada da camada de apresentação para facilitar testes.
+    *   `src/App.jsx`: Orquestrador central (Container Component).
 
----
+## 🧠 Algoritmo de Missão e Preempção
 
-## Tecnologias Utilizadas
+O núcleo do sistema utiliza um motor de decisão baseado em **Preempção de Prioridade**:
 
-* React (interface)
-* Vite (build e ambiente de desenvolvimento)
-* JavaScript (lógica do sistema)
-* CSS (estilização estilo terminal)
-* Vercel (deploy)
+1.  **Prioridade 1 (Urgência Máxima):** Interrompe imediatamente qualquer missão em curso (P2 ou P3).
+2.  **Prioridade 2 (Urgência Moderada):** Interrompe missões P3 se o progresso atual for inferior a 50% (evitando desperdício de energia em missões quase concluídas).
+3.  **Auditabilidade:** Missões interceptadas mantêm um log de "Interception Metadata" (Motivo, Data e Hora) e têm seu progresso resetado para garantir a integridade da carga.
 
----
+## 🧪 Estratégia de Qualidade (QA)
 
-## Como Executar o Projeto Localmente
+A confiabilidade do sistema é garantida por uma suíte de testes unitários que cobre cenários extremos:
+*   Ordenação estável em empates múltiplos.
+*   Proteção contra "Missões Zumbis" (missões inativas com alta prioridade).
+*   Recuperação estratégica de falhas (Bloqueio seletivo de tarefas).
 
-### 1. Pré-requisitos
-
-É necessário ter instalado:
-
-* Node.js (versão 16 ou superior)
-* npm (gerenciador de pacotes)
-
----
-
-### 2. Instalar as dependências
-
+**Executar Testes:**
 ```bash
-npm install
+npm run test
 ```
 
----
+## 🛠️ Instalação e Uso
 
-### 3. Rodar o projeto
-
-```bash
-npm run dev
-```
+1. Instale as dependências: `npm install`
+2. Inicie o servidor: `npm run dev`
+3. Acesse: `http://localhost:5173`
 
 ---
-
-### 4. Acessar no navegador
-
-Abra:
-
-```
-http://localhost:5173
-```
-
----
-
-## Deploy
-
-O projeto foi publicado utilizando a plataforma:
-
-* **Vercel**
-
-A Vercel foi escolhida por sua integração direta com projetos React + Vite, permitindo deploy automático a partir do repositório.
-
----
-
-## Funcionalidades do Sistema
-
-### 1. Criação de Missões
-
-O usuário pode criar missões informando:
-
-* Origem
-* Destino
-* Tipo de carga
-* Prioridade (1 a 3)
-* Distância estimada
-
-#### Validações:
-
-* Campos obrigatórios não podem estar vazios
-* Prioridade deve ser numérica (1 a 3)
-* Distância deve ser maior que zero
-
-Caso haja erro, o sistema gera alertas detalhados.
-
----
-
-### 2. Execução Automática de Missões
-
-* O robô executa automaticamente a próxima missão disponível
-* A ordem segue:
-
-  * Prioridade (1 > 2 > 3)
-  * Menor distância
-* Missões levam tempo real baseado na distância (em segundos)
-
----
-
-### 3. Sistema de Alertas
-
-O sistema registra eventos importantes, como:
-
-* Erros de validação
-* Latência alta
-* Bateria baixa
-* Falha de missão
-* Cancelamento de missão
-
-Cada alerta contém:
-
-* Mensagem
-* Data e hora (baseado no sistema do usuário)
-
----
-
-### 4. Telemetria em Tempo Real
-
-Dados atualizados constantemente:
-
-* Bateria (%)
-* Latência (ms)
-* Status do robô
-* Missão atual
-* Última atualização
-
-#### Comportamentos simulados:
-
-* Bateria:
-
-  * Diminui durante execução
-  * Recarrega quando o robô está ocioso
-* Latência:
-
-  * Oscila continuamente
-  * Pequena chance de picos altos
-
----
-
-### 5. Falhas e Recuperação
-
-* Missões podem falhar automaticamente
-* Se a bateria chegar a 0%, a missão falha
-* Missões com falha retornam para "pendente" após 10 segundos
-
----
-
-### 6. Cancelamento de Missão
-
-* O usuário pode cancelar a missão atual manualmente
-* O sistema registra o evento e gera alerta
-
----
-
-### 7. Integração REST Simulada (Opção A)
-
-O sistema simula envio de dados para uma API hospitalar.
-
-Sempre que ocorre um evento relevante, é gerado um objeto JSON contendo:
-
-* ID da missão
-* Origem e destino
-* Tipo de carga
-* Prioridade
-* Status da missão
-* Timestamp
-
-Esse JSON é exibido no console do navegador.
-
----
-
-## Observações
-
-Este projeto é uma simulação, não havendo integração com hardware real ou backend persistente.
-
-O foco está na lógica de controle, organização de tarefas e simulação de comportamento de um sistema autônomo.
-
-Projeto desenvolvido para fins acadêmicos e avaliação técnica.
+*Documentação técnica rigorosa para processos de avaliação de engenharia.*

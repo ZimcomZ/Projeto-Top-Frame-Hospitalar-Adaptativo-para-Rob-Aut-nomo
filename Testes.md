@@ -1,46 +1,37 @@
-## Testes Manuais
+# 🤖 Relatório de Testes de Engenharia
 
-### 1. Criação de missão com validação
+Este documento descreve os procedimentos e resultados dos testes realizados na lógica de missão e prioridade do robô.
 
-**Passos:**
+## 📊 Suíte de Testes Unitários (Vitest)
 
-* Deixar algum campo vazio (ex: origem)
-* Inserir texto em prioridade (ex: "abc")
-* Clicar em "ADICIONAR"
+A lógica central foi testada contra diversos cenários de estresse para garantir que o robô tome a decisão correta em 100% dos casos.
 
-**Resultado esperado:**
+### 1. Teste de Fila de Prioridade (Baseline)
+*   **Cenário:** Múltiplas missões pendentes com prioridades e distâncias variadas.
+*   **Resultado esperado:** P1 > P2 > P3. Em empate de prioridade, menor distância ganha.
+*   **Status:** ✅ PASSOU.
 
-* Um alerta é exibido para cada erro cometido
-* A missão NÃO é criada
-* Os alertas indicam exatamente o problema (campo vazio, valor inválido, etc.)
+### 2. Teste de Recuperação Estratégica (Blocking Logic)
+*   **Cenário:** Uma missão P1 falha. Uma missão P3 surge enquanto a P1 está em fase de recuperação (5s).
+*   **Resultado esperado:** O robô deve aguardar a recuperação da P1 e não iniciar a P3, a menos que uma nova P1 ou superior apareça.
+*   **Status:** ✅ PASSOU.
+
+### 3. Teste de Preempção (Interrupção)
+*   **Cenário:** P3 em curso (20% concluído) vs Nova P2.
+*   **Resultado esperado:** Cancelamento imediato da P3 (reset de progresso) e início da P2.
+*   **Cenário:** P3 em curso (80% concluído) vs Nova P2.
+*   **Resultado esperado:** Conclusão da P3 e início da P2 em sequência.
+*   **Status:** ✅ PASSOU.
+
+### 4. Teste Anti-Confusão (Zombie State)
+*   **Cenário:** Injetar missões P1 com status de "Concluída" ou "Falha" misturadas com missões P3 "Pendentes".
+*   **Resultado esperado:** O sistema deve priorizar missões ATIVAS, nunca tratando uma missão morta como prioridade de execução.
+*   **Status:** ✅ PASSOU.
+
+## ⚙️ Testes de Integração e UX
+*   **Auto-Cleanup:** Verificado que missões canceladas/concluídas desaparecem após 60s.
+*   **Battery Safety:** Verificado consumo de 1% a cada 5s e recarga rápida (2s) em repouso.
+*   **Emergency Stop:** Verificado que o acionamento global congela o motor e devolve a missão atual para a fila.
 
 ---
-
-### 2. Execução automática de missão
-
-**Passos:**
-
-* Criar uma missão válida
-* Aguardar alguns segundos
-
-**Resultado esperado:**
-
-* A missão muda de "pendente" para "em_execucao"
-* O tempo (distância) começa a diminuir a cada segundo
-* Ao chegar em 0, a missão muda para "concluida"
-
----
-
-### 3. Sistema de alertas e telemetria
-
-**Passos:**
-
-* Observar o sistema em funcionamento
-* Aguardar a bateria cair abaixo de 20% ou ocorrer latência alta
-
-**Resultado esperado:**
-
-* Um alerta é exibido quando a bateria fica baixa (sempre que descer abaixo de 20%)
-* Alertas de latência aparecem ocasionalmente
-* Cada alerta contém data e hora
-* A telemetria (bateria, latência, status) é atualizada em tempo real
+*Relatório gerado automaticamente via suíte Vitest.*

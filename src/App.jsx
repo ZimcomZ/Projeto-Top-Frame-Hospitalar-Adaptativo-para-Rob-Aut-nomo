@@ -1,46 +1,38 @@
 import "./App.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import MissionForm from "./components/MissionForm";
+import MissionList from "./components/MissionList";
+import TelemetryPanel from "./components/TelemetryPanel";
+import SystemLog from "./components/SystemLog";
+import { sortMissions } from "./utils/missionLogic";
 
 function App() {
   const [missions, setMissions] = useState([]);
 
-  const [origem, setOrigem] = useState("");
-  const [destino, setDestino] = useState("");
-  const [tipoCarga, setTipoCarga] = useState("");
-  const [prioridade, setPrioridade] = useState("");
-  const [distancia, setDistancia] = useState("");
-
-  // Telemetria
+  // Telemetria Global
   const [battery, setBattery] = useState(100);
   const [latency, setLatency] = useState(50);
   const [robotStatus, setRobotStatus] = useState("Inativo");
   const [currentMission, setCurrentMission] = useState("Nenhuma");
   const [lastUpdate, setLastUpdate] = useState("--:--:--");
+  const [isEmergency, setIsEmergency] = useState(false);
 
   // Alertas
   const [alerts, setAlerts] = useState([]);
   const [batteryAlertSent, setBatteryAlertSent] = useState(false);
 
   //---------------------------------------------------
-  // ALERTAS
+  // ALERTAS E API
   //---------------------------------------------------
-  function addAlert(message) {
-    const timestamp = new Date().toLocaleString();
-
+  const addAlert = useCallback((message) => {
+    const timestamp = new Date().toLocaleTimeString();
     setAlerts((prev) => [
-      {
-        id: Date.now() + Math.random(),
-        message,
-        timestamp
-      },
+      { id: Date.now() + Math.random(), message, timestamp },
       ...prev
-    ]);
-  }
+    ].slice(0, 50));
+  }, []);
 
-  //---------------------------------------------------
-  // SIMULA API HOSPITALAR
-  //---------------------------------------------------
-  function sendHospitalStatus(mission, status) {
+  const sendHospitalStatus = useCallback((mission, status) => {
     const payload = {
       missionId: mission.id,
       origem: mission.origem,
@@ -50,386 +42,261 @@ function App() {
       status: status,
       timestamp: new Date().toLocaleString()
     };
+    console.log("=== API HOSPITALAR ===", payload);
+    addAlert(`API Hospitalar: Missão ${mission.id} -> ${status}`);
+  }, [addAlert]);
 
-    console.log("=== API HOSPITALAR ===");
-    console.log(payload);
+  //---------------------------------------------------
+  // LÓGICA DE NEGÓCIO
+  //---------------------------------------------------
+  const sortedMissions = useMemo(() => sortMissions(missions), [missions]);
 
-    addAlert(
-      `API Hospitalar: Missão ${mission.id} -> ${status}`
-    );
+  function handleAddMission(missionData) {
+    const newMission = {
+      id: Date.now(),
+      ...missionData,
+      originalDistance: missionData.distancia,
+      status: "pendente"
+    };
+    setMissions(prev => [...prev, newMission]);
   }
 
-  //---------------------------------------------------
-  // CANCELAR MISSÃO
-  //---------------------------------------------------
-  function cancelCurrentMission() {
-    const executingMission = missions.find(
-      (m) => m.status === "em_execucao"
-    );
-
+  function handleCancelMission() {
+    const executingMission = missions.find(m => m.status === "em_execucao");
     if (!executingMission) {
       addAlert("Nenhuma missão em execução para cancelar");
       return;
     }
-
     sendHospitalStatus(executingMission, "cancelada");
-
-    setMissions((prev) =>
-      prev.map((m) =>
-        m.id === executingMission.id
-          ? { ...m, status: "cancelada" }
-          : m
-      )
-    );
-
-    addAlert(
-      `Missão ${executingMission.id} foi cancelada manualmente`
-    );
-
+    setMissions(prev => prev.map(m => m.id === executingMission.id ? { ...m, status: "cancelada" } : m));
+    addAlert(`Missão ${executingMission.id} foi cancelada manualmente`);
     setRobotStatus("Inativo");
     setCurrentMission("Nenhuma");
+
+    // Auto-remover da fila após 60 segundos (1 minuto)
+    setTimeout(() => {
+      setMissions(prev => prev.filter(m => m.id !== executingMission.id));
+    }, 60000);
   }
 
-  //---------------------------------------------------
-  // CRIAR MISSÃO
-  //---------------------------------------------------
-  function addMission() {
-    let hasError = false;
-
-    if (!origem.trim()) {
-      addAlert("Origem não pode estar vazia");
-      hasError = true;
-    }
-
-    if (!destino.trim()) {
-      addAlert("Destino não pode estar vazio");
-      hasError = true;
-    }
-
-    if (!tipoCarga.trim()) {
-      addAlert("Tipo de carga não pode estar vazio");
-      hasError = true;
-    }
-
-    if (isNaN(prioridade)) {
-      addAlert("Prioridade deve ser um número");
-      hasError = true;
-    }
-
-    if (
-      !isNaN(prioridade) &&
-      (Number(prioridade) < 1 || Number(prioridade) > 3)
-    ) {
-      addAlert("Prioridade deve estar entre 1 e 3");
-      hasError = true;
-    }
-
-    if (isNaN(distancia)) {
-      addAlert("Distância deve ser um número");
-      hasError = true;
-    }
-
-    if (
-      !isNaN(distancia) &&
-      Number(distancia) <= 0
-    ) {
-      addAlert("Distância deve ser maior que zero");
-      hasError = true;
-    }
-
-    if (hasError) return;
-
-    const newMission = {
-      id: Date.now(),
-      origem,
-      destino,
-      tipoCarga,
-      prioridade: Number(prioridade),
-      distancia: Number(distancia),
-      originalDistance: Number(distancia),
-      status: "pendente"
-    };
-
-    const updated = [...missions, newMission];
-
-    updated.sort((a, b) => {
-      if (a.status === "em_execucao") return -1;
-      if (b.status === "em_execucao") return 1;
-
-      if (a.status !== "pendente") return 1;
-      if (b.status !== "pendente") return -1;
-
-      if (a.prioridade !== b.prioridade) {
-        return a.prioridade - b.prioridade;
+  function handleEmergencyStop() {
+    if (isEmergency) {
+      setIsEmergency(false);
+      addAlert("OPERAÇÃO RETOMADA");
+    } else {
+      setIsEmergency(true);
+      addAlert("🛑 PARADA DE EMERGÊNCIA ATIVADA 🛑");
+      // Aborta missão atual e joga pra fila
+      const executingMission = missions.find(m => m.status === "em_execucao");
+      if (executingMission) {
+        sendHospitalStatus(executingMission, "pendente");
+        setMissions(prev => prev.map(m => m.id === executingMission.id ? { ...m, status: "pendente" } : m));
       }
-
-      return a.distancia - b.distancia;
-    });
-
-    setMissions(updated);
-
-    setOrigem("");
-    setDestino("");
-    setTipoCarga("");
-    setPrioridade("");
-    setDistancia("");
+      setRobotStatus("PARADA DE EMERGÊNCIA");
+      setCurrentMission("Nenhuma");
+    }
   }
 
   //---------------------------------------------------
-  // TELEMETRIA
+  // EFFECTS (Ciclo de vida e Sensores)
   //---------------------------------------------------
+  // Latência
   useEffect(() => {
     const interval = setInterval(() => {
       const chance = Math.random();
-      let newLatency;
-
-      if (chance < 0.99) {
-        newLatency = Math.floor(Math.random() * 90);
-      } else {
-        newLatency = Math.floor(Math.random() * 50) + 100;
-      }
-
+      let newLatency = chance < 0.99 ? Math.floor(Math.random() * 90) : Math.floor(Math.random() * 50) + 100;
       setLatency(newLatency);
-
-      if (newLatency > 100) {
-        addAlert("Latência alta detectada");
-      }
-
+      if (newLatency > 100) addAlert("Latência alta detectada");
       setLastUpdate(new Date().toLocaleTimeString());
     }, 1000);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [addAlert]);
 
-  //---------------------------------------------------
-  // FALHA → VOLTA PARA PENDENTE
-  //---------------------------------------------------
+  // Retry de falhas
   useEffect(() => {
-    const failed = missions.find(
-      (m) => m.status === "falha"
-    );
-
+    const failed = missions.find(m => m.status === "falha");
     if (!failed) return;
 
     const timer = setTimeout(() => {
       sendHospitalStatus(failed, "pendente");
-
-      setMissions((prev) =>
-        prev.map((m) =>
-          m.id === failed.id
-            ? {
-                ...m,
-                status: "pendente",
-                distancia: m.originalDistance
-              }
-            : m
-        )
-      );
-
-      addAlert(
-        `Missão ${failed.id} retornou para pendente`
-      );
-    }, 10000);
+      setMissions(prev => prev.map(m => m.id === failed.id ? { ...m, status: "pendente", distancia: m.originalDistance } : m));
+      addAlert(`Missão ${failed.id} retornou para fila`);
+    }, 5000); // Reduzido de 10000 para 5000 (5 segundos)
 
     return () => clearTimeout(timer);
-  }, [missions]);
+  }, [missions, sendHospitalStatus, addAlert]);
 
-  //---------------------------------------------------
-  // CONTROLE DO ROBÔ
-  //---------------------------------------------------
+  // Motor Principal do Robô
   useEffect(() => {
     const interval = setInterval(() => {
-      const executing = missions.find(
-        (m) => m.status === "em_execucao"
-      );
+      if (isEmergency) return;
+
+      const executing = sortedMissions.find(m => m.status === "em_execucao");
+      const nextPending = sortedMissions.find(m => m.status === "pendente" || m.status === "cancelada_por_emergencia");
+
+      // --- LÓGICA DE INTERRUPÇÃO (Preemption) ---
+      if (executing && nextPending) {
+        let shouldInterrupt = false;
+        
+        // Regra 1: P1 interrompe P2 ou P3 imediatamente
+        if (nextPending.prioridade === 1 && executing.prioridade > 1) {
+          shouldInterrupt = true;
+          addAlert(`🚨 INTERRUPÇÃO CRÍTICA: Missão ${nextPending.id} (P1) interceptou Missão ${executing.id}`);
+        } 
+        // Regra 2: P2 interrompe P3 se estiver no início (< 50% concluído)
+        else if (nextPending.prioridade === 2 && executing.prioridade === 3) {
+          const progress = ((executing.originalDistance - executing.distancia) / executing.originalDistance);
+          if (progress < 0.5) {
+            shouldInterrupt = true;
+            addAlert(`⚠ RE-ROTEAMENTO: Missão ${nextPending.id} (P2) prioritária. Missão ${executing.id} abortada.`);
+          }
+        }
+
+        if (shouldInterrupt) {
+          const reason = nextPending.prioridade === 1 
+            ? `Interceptada por P1 (Urgência Máxima)` 
+            : `Interceptada por P2 (Prioridade Superior)`;
+          
+          const timestamp = new Date().toLocaleString();
+
+          setMissions(prev => prev.map(m => 
+            m.id === executing.id 
+              ? { 
+                  ...m, 
+                  status: "cancelada_por_emergencia", 
+                  distancia: m.originalDistance, // Reseta progresso
+                  interceptionInfo: { reason, timestamp } 
+                } 
+              : m
+          ));
+          
+          sendHospitalStatus(executing, "cancelada_por_emergencia");
+          
+          // Retorna para pendente após 5 segundos
+          setTimeout(() => {
+            setMissions(prev => prev.map(m => m.id === executing.id ? { ...m, status: "pendente" } : m));
+            addAlert(`ℹ Missão ${executing.id} retornou para a fila após interrupção.`);
+          }, 5000);
+          
+          setRobotStatus("Re-roteando...");
+          return;
+        }
+      }
 
       if (executing) {
-        setRobotStatus("Executando");
+        setRobotStatus("Em Movimento");
         setCurrentMission(executing.id);
 
         if (battery <= 0) {
+          setMissions(prev => prev.map(m => m.id === executing.id ? { ...m, status: "falha" } : m));
+          setRobotStatus("Bateria Esgotada");
           sendHospitalStatus(executing, "falha");
-
-          setMissions((prev) =>
-            prev.map((m) =>
-              m.id === executing.id
-                ? { ...m, status: "falha" }
-                : m
-            )
-          );
-
-          addAlert("Bateria esgotada");
+          addAlert(`Missão ${executing.id} FALHOU (Sem bateria)`);
           return;
         }
 
-        setBattery((prev) => {
-          if (executing.distancia % 20 === 0) {
-            return Math.max(prev - 1, 0);
+        const chanceFalha = Math.random();
+        if (chanceFalha < 0.01) {
+          setMissions(prev => prev.map(m => m.id === executing.id ? { ...m, status: "falha" } : m));
+          setRobotStatus("Erro de Hardware");
+          sendHospitalStatus(executing, "falha");
+          addAlert(`Missão ${executing.id} FALHOU (Erro motor/sensor)`);
+          return;
+        }
+
+        setMissions(prev => prev.map(m => {
+          if (m.id === executing.id) {
+            const newDist = m.distancia - 1;
+            if (newDist <= 0) {
+              sendHospitalStatus(m, "concluida");
+              addAlert(`Missão ${m.id} CONCLUÍDA`);
+
+              setTimeout(() => {
+                setMissions(prev => prev.filter(mission => mission.id !== m.id));
+              }, 60000);
+
+              return { ...m, distancia: 0, status: "concluida" };
+            }
+            return { ...m, distancia: newDist };
+          }
+          return m;
+        }));
+
+        setBattery(prev => {
+          if (new Date().getSeconds() % 5 === 0) {
+            const newBat = prev - 1;
+            if (newBat <= 20 && !batteryAlertSent) {
+              addAlert("BATERIA CRÍTICA! < 20%");
+              setBatteryAlertSent(true);
+            }
+            return newBat < 0 ? 0 : newBat;
           }
           return prev;
         });
-
-        if (battery < 20 && !batteryAlertSent) {
-          addAlert("Bateria abaixo de 20%");
-          setBatteryAlertSent(true);
-        }
-
-        const fail = Math.random();
-        if (fail < 0.002) {
-          sendHospitalStatus(executing, "falha");
-
-          setMissions((prev) =>
-            prev.map((m) =>
-              m.id === executing.id
-                ? { ...m, status: "falha" }
-                : m
-            )
-          );
-
-          return;
-        }
-
-        setMissions((prev) =>
-          prev.map((m) => {
-            if (m.id === executing.id) {
-              const newDist = m.distancia - 1;
-
-              if (newDist <= 0) {
-                sendHospitalStatus(m, "concluida");
-
-                return {
-                  ...m,
-                  distancia: 0,
-                  status: "concluida"
-                };
-              }
-
-              return { ...m, distancia: newDist };
-            }
-            return m;
-          })
-        );
-
         return;
       }
 
-      const pending = missions
-        .filter((m) => m.status === "pendente")
-        .sort((a, b) => {
-          if (a.prioridade !== b.prioridade) {
-            return a.prioridade - b.prioridade;
-          }
-          return a.distancia - b.distancia;
-        });
+      // Se ocioso, busca da fila
+      const next = sortedMissions.find(m => m.status === "pendente");
+      
+      // --- LÓGICA DE BLOQUEIO POR FALHA (Strategic Blocking) ---
+      // Se houver uma missão em FALHA com prioridade MAIOR ou IGUAL à próxima pendente, o robô espera.
+      // Exceto se a próxima pendente for P1 (Urgência máxima ignora o bloqueio de falhas P2/P3).
+      const highestPriorityFailure = missions
+        .filter(m => m.status === "falha")
+        .sort((a, b) => a.prioridade - b.prioridade)[0];
 
-      const next = pending[0];
+      if (highestPriorityFailure && next) {
+        const isNextHigherPriority = next.prioridade < highestPriorityFailure.prioridade;
+        
+        if (!isNextHigherPriority && next.prioridade !== 1) {
+          setRobotStatus(`Aguardando Recuperação P${highestPriorityFailure.prioridade}`);
+          return; // Bloqueia execução de missões de menor prioridade
+        }
+      }
 
-      if (next) {
+      if (next && battery > 0) {
+        setMissions(prev => prev.map(m => m.id === next.id ? { ...m, status: "em_execucao" } : m));
         sendHospitalStatus(next, "em_execucao");
-
-        setMissions((prev) =>
-          prev.map((m) =>
-            m.id === next.id
-              ? { ...m, status: "em_execucao" }
-              : m
-          )
-        );
-
+        addAlert(`Iniciando missão ${next.id} para ${next.destino}`);
         return;
       }
 
-      setRobotStatus("Inativo");
+      setRobotStatus("Em Repouso");
       setCurrentMission("Nenhuma");
 
-      setBattery((prev) => {
+      // Recarrega
+      setBattery(prev => {
         if (prev >= 20) setBatteryAlertSent(false);
-
-        if (
-          prev < 100 &&
-          new Date().getSeconds() % 20 === 0
-        ) {
-          return prev + 1;
-        }
-
+        // Recarrega a cada 2 segundos em vez de 5 (Mais rápido)
+        if (prev < 100 && new Date().getSeconds() % 2 === 0) return prev + 1;
         return prev;
       });
 
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [missions, battery, batteryAlertSent]);
+  }, [sortedMissions, battery, batteryAlertSent, sendHospitalStatus, addAlert, isEmergency]);
 
   return (
-    <div className="dashboard">
-
+    <div className={`dashboard ${isEmergency ? 'emergency-mode' : ''}`}>
       <div className="left-panel">
-        <div className="missions-box">
-          <p>{">"} MISSÕES</p>
-          <p>-------------</p>
-
-          {missions.length === 0 ? (
-            <p>Nenhuma missão</p>
-          ) : (
-            missions.map((m) => (
-              <p key={m.id}>
-                ID: {m.id}<br />
-                {m.origem} → {m.destino}<br />
-                Carga: {m.tipoCarga}<br />
-                Prioridade: {m.prioridade}<br />
-                Tempo restante: {m.distancia}s<br />
-                Status: {m.status}
-                <br />---------
-              </p>
-            ))
-          )}
-        </div>
-
-        <div className="create-box">
-          <p>{">"} CRIAR MISSÃO</p>
-          <p>----------</p>
-
-          <input placeholder="Origem" value={origem} onChange={e => setOrigem(e.target.value)} />
-          <input placeholder="Destino" value={destino} onChange={e => setDestino(e.target.value)} />
-          <input placeholder="Tipo de carga" value={tipoCarga} onChange={e => setTipoCarga(e.target.value)} />
-          <input placeholder="Prioridade (1-3)" value={prioridade} onChange={e => setPrioridade(e.target.value)} />
-          <input placeholder="Distância (segundos)" value={distancia} onChange={e => setDistancia(e.target.value)} />
-
-          <button onClick={addMission}>ADICIONAR</button>
-        </div>
+        <MissionList sortedMissions={sortedMissions} />
+        <MissionForm onAddMission={handleAddMission} />
       </div>
 
-      <div className="telemetry-box">
-        <p>{">"} TELEMETRIA</p>
-        <p>-------------</p>
+      <TelemetryPanel 
+        battery={battery}
+        latency={latency}
+        robotStatus={robotStatus}
+        currentMission={currentMission}
+        lastUpdate={lastUpdate}
+        isEmergency={isEmergency}
+        onCancelMission={handleCancelMission}
+        onEmergencyStop={handleEmergencyStop}
+      />
 
-        <p>Bateria: {battery}%</p>
-        <p>Latência: {latency}ms</p>
-        <p>Status: {robotStatus}</p>
-        <p>Missão atual: {currentMission}</p>
-        <p>Atualização: {lastUpdate}</p>
-
-        <button onClick={cancelCurrentMission}>
-          CANCELAR MISSÃO
-        </button>
-      </div>
-
-      <div className="alerts-box">
-        <p>{">"} ALERTAS</p>
-        <p>----------</p>
-
-        {alerts.length === 0 ? (
-          <p>Nenhum alerta</p>
-        ) : (
-          alerts.map((a) => (
-            <p key={a.id}>
-              [{a.timestamp}]<br />
-              {a.message}
-              <br />---------
-            </p>
-          ))
-        )}
-      </div>
-
+      <SystemLog alerts={alerts} />
     </div>
   );
 }

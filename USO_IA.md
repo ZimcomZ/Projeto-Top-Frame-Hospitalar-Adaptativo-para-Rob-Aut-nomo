@@ -1,74 +1,29 @@
-# Uso de Inteligência Artificial no Projeto
+# 🤖 Diretrizes de Codificação e Uso de IA
 
-## Ferramenta de IA utilizada
+Este projeto utiliza ferramentas de Inteligência Artificial para acelerar o desenvolvimento, garantir a padronização do código e elevar o rigor da cobertura de testes.
 
-Foi utilizada a ferramenta **ChatGPT (modelo GPT-5.3)** como suporte ao desenvolvimento do projeto.
+## 🛠️ Padronização de Código via IA
 
----
+A IA foi utilizada para aplicar e manter os seguintes padrões de engenharia:
 
-## Partes do projeto em que a IA foi utilizada
+1.  **Refatoração de Clean Code:** Identificação automática de "God Components" e separação em componentes funcionais menores.
+2.  **Arquitetura Baseada em Props:** Garantia de que todos os componentes de UI sejam puros e recebam dados via props, facilitando o teste e a depuração.
+3.  **Hooks Customizados:** Implementação de `useMemo` para lógica computacional pesada (como ordenação de filas) e `useCallback` para funções passadas a componentes filhos, prevenindo renderizações desnecessárias.
+4.  **Estilo Consistente:** Padronização do CSS para uso de variáveis visuais e layout flexível (Flexbox/CSS Grid).
 
-A IA foi utilizada como apoio técnico nas seguintes áreas:
+## 🧪 Estratégia de Testes Assistida
 
-* Estruturação inicial do projeto com React + Vite
-* Construção e organização dos componentes da interface
-* Simulação de integração com API hospitalar (envio de JSON para console)
-* Auxílio na correção de erros (debug) e ajustes de lógica
-* Orientação no processo de deploy utilizando a plataforma Vercel
-* Auxílio na documentação
+A IA desempenhou um papel central na validação da robustez do sistema através de:
 
-A ferramenta foi utilizada como suporte, sendo o entendimento, adaptação e validação da lógica realizados manualmente.
+*   **Geração de Casos de Borda (Edge Cases):** Criação de cenários de teste agressivos que tentam quebrar a lógica de prioridade (ex: concorrência de missões, falhas críticas simultâneas).
+*   **Implementação de Testes Unitários:** Escrita de suítes de teste usando Vitest para validar funções puras de lógica de negócio.
+*   **Simulação de Falhas:** Desenvolvimento de scripts de simulação que induzem latência, erro de hardware e exaustão de bateria para validar o comportamento do dashboard em situações de crise.
 
----
+## 📈 Benefícios Obtidos
 
-## Partes mais importantes do código para avaliação
-
-As partes consideradas mais relevantes para avaliação técnica são:
-
-### 1. Lógica de gerenciamento de missões
-
-* Ordenação por prioridade (1 > 2 > 3) e distância
-* Controle de estados (pendente, em execução, concluída, falha, cancelada)
-* Execução sequencial respeitando regras de prioridade
+*   **Redução de Bugs:** A análise estática via IA e linter eliminou avisos de Hooks do React e potenciais loops infinitos.
+*   **Documentação Viva:** Manutenção automatizada de arquivos de log e README para refletir as últimas mudanças de engenharia.
+*   **Segurança Operacional:** Validação formal da lógica de interrupção (Preemption) para garantir que vidas (no cenário hospitalar) sejam sempre priorizadas.
 
 ---
-
-### 2. Simulação de telemetria
-
-* Atualização contínua da bateria (descarga e recarga)
-* Simulação de latência com comportamento variável
-* Integração entre estado do robô e execução das missões
-
----
-
-### 3. Sistema de alertas
-
-* Geração de alertas com timestamp
-* Controle para evitar spam (ex: alerta único de bateria baixa)
-* Registro de eventos importantes (falhas, cancelamentos, erros de entrada)
-
----
-
-### 4. Validação de entrada de dados
-
-* Verificação de campos obrigatórios
-* Validação de tipos numéricos
-* Geração de múltiplos alertas em caso de erro
-
----
-
-### 5. Integração simulada com API
-
-* Construção de payload JSON representando o estado do sistema
-* Registro no console simulando comunicação com sistema hospitalar
-
----
-
-## Considerações finais
-
-A IA foi utilizada como ferramenta de apoio para acelerar o desenvolvimento e auxiliar na resolução de problemas técnicos.
-Toda a lógica aplicada no sistema foi compreendida, adaptada e validada manualmente durante o desenvolvimento.
-
-## Oque foi aprendido
-
-Como candidato pude entender melhor como funciona a aplicação de API
+*Este projeto demonstra a sinergia entre engenharia humana e ferramentas avançadas de IA.*
